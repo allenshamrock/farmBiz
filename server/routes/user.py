@@ -8,10 +8,10 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from datetime import datetime,timedelta
 import os
 import jwt
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from flask_jwt_extended import create_access_token
 
-load_dotenv()
+# load_dotenv()
 
 jwt_secret_key = os.getenv('JWT_SECRET_KEY')
 class Signup(Resource):
