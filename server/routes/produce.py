@@ -1,9 +1,10 @@
 from  flask_restful import Resource
 from flask import make_response,jsonify,request 
-from models import Produce,uuid
+from models import Produce, uuid
 from config import db
 
-class Produce(Resource):
+
+class Produces(Resource):
     def get(self):
         produces = Produce.query.all()
         produce_list = []
@@ -32,3 +33,7 @@ class Produce(Resource):
         
         db.session.add(new_produce)
         db.session.commit()
+        return {"message":"Produce added successfully"}, 201
+    
+
+        
