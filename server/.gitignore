@@ -68,3 +68,4 @@ instance
 .vscode
 package-lock.json
 /backend/venv
+.env
