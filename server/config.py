@@ -5,7 +5,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from sqlalchemy import MetaData  # Corrected import
 from flask_cors import CORS
-from flask_oauthlib.client import OAuth
 import os
 
 app = Flask(__name__)
@@ -28,17 +27,5 @@ api = Api(app)
 
 CORS(app)
 
-oauth = OAuth(app)
 
-google = oauth.register(
-    name='google',
-    client_id=os.getenv('CLIENT_ID'),
-    client_secret=os.getenv('CLIENT_SECRET'),
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-    authorize_params=None,
-    access_token_url='https://accounts.google.com/o/oauth2/token',
-    access_token_params=None,
-    refresh_token_url=None,
-    redirect_uri=os.getenv('GOOGLE_REDIRECT_URI'),
-    client_kwargs={'scope': 'openid profile email'}
-)
+
