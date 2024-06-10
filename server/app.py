@@ -67,9 +67,7 @@ def authorized():
     })
 
 
-# Other API resources...
 
-# Example of a Signup resource
 class Signup(Resource):
     def post(self):
         data = request.get_json()
