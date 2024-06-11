@@ -7,6 +7,9 @@ from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import get_jwt_identity, jwt_required, create_refresh_token
 from datetime import datetime, timedelta
 import os
+import cloudinary
+from cloudinary import uploader
+import cloudinary.api
 import jwt
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
@@ -31,6 +34,15 @@ google = oauth.register(
     client_kwargs={'scope': 'openid profile email'}
 )
 
+cloudinary.config(
+    cloud_name = os.getenv('CLOUD_NAME'),
+    api_key = os.getenv('API_KEY'),
+    api_secret = os.getenv('API_SECRET')
+)
+app.config['SEND_API_KEY'] = os.getenv('SEND_API_KEY')
+if not all([cloudinary.config().cloud_name, cloudinary.config().api_key, cloudinary.config().api_secret]):
+    raise ValueError(
+        "No Cloudinary configuration found. Ensure CLOUD_NAME, API_KEY, and API_SECRET are set.")
 
 
 @app.route('/login/google')
@@ -70,25 +82,48 @@ def authorized():
 
 class Signup(Resource):
     def post(self):
-        data = request.get_json()
-        if data is None:
-            return make_response(jsonify({"error": "Invalid JSON payload"}), 400)
+        app.logger.info(f"Form data: {request.form}")
+        app.logger.info(f"Files: {request.files}")
+        data = request.form
+
+        file_to_upload = request.files.get('file')
+        if not file_to_upload or file_to_upload.filename == '':
+            return jsonify({"error": "File is required"}), 400
 
         try:
-            username = data["username"]
-            email = data["email"]
-            password = data["password"]
-            role = data["role"]
-            profile_url = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-            hashed_password = generate_password_hash(
-                password, method="pbkdf2:sha512")
+            username = data.get("username")
+            email = data.get("email")
+            password = data.get("password")
+            role = data.get("role")
+            profile_url = data.get("profile")
+            app.logger.info(
+            f"Recieved Data: username:{username}, email:{email}, profile_url:{profile_url}, role:{role}"
+        )
+        # Validate missing fields
+            missing_fields = [field for field in ["username", "email", "phone",
+                                                "password", "profile_url"] if not data.get(field)]
+            if missing_fields:
+                return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
 
+            # Upload file to Cloudinary (or handle it appropriately in your context)
+            try:
+                if profile_url == 'image':
+                    # Ensure you have your uploader configured
+                    upload_result = uploader.upload(
+                        file_to_upload, resource_type='image')
+                else:
+                    return jsonify({"error": "Profile must be an image"}), 400
+            except Exception as e:
+                app.logger.error(f"Error uploading file to Cloudinary: {e}")
+                return jsonify({"error": "File upload failed"}), 500
+
+            file_url = upload_result.get('url')
             user = User(
                 username=username,
                 email=email,
-                password_hash=hashed_password,
+                password=password,
                 role=role,
-                profile_picture=profile_url,
+                profile_picture=file_url,
                 joined_at=datetime.utcnow()
             )
             db.session.add(user)

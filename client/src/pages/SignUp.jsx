@@ -18,7 +18,9 @@ import {
 } from "@chakra-ui/react";
 import { FaImage } from "react-icons/fa";
 import * as yup from "yup";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form, Field,ErrorMessage } from "formik";
+import { toast } from "react-toastify";
+import axios from 'axios'
 import {
   AtSignIcon,
   EmailIcon,
@@ -60,20 +62,58 @@ function SignUp() {
     password: "",
     confirmPassword: "",
     profile_picture: "image",
+    role:''
   };
 
   const handleFileChange = (e) => {
-    const selectedFile = e.target.file[0];
+    const selectedFile = e.target.files[0];
     setFile(selectedFile);
   };
 
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("username", values.username);
+      formData.append("password", values.password);
+      formData.append("role",values.role)
+      formData.append("profile_picture", "image");
+
+      if (file) {
+        formData.append("file", file);
+      } else {
+        setSubmitting(false);
+        return toast.error("File is required");
+      }
+
+      const response = await axios.post("http://127.0.0.1:5555/signup",formData)
+   
+      if (!response.ok) {
+        const errorMessage = await response.json();
+        console.log(formData)
+        setError(errorMessage.error || "An error occured .PLease try again");
+      }
+    } catch (error) {
+      console.error("Error posting data", error);
+      toast.error(
+        error.response?.data?.message || "An unexpected error occurred"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+    console.log(formData)
+  };
   return (
     <Box
       minH={"100vh"}
       w={{ base: "100%", md: "50%" }}
       className="h-screen  py-[60px] flex flex-col justify-center items-center "
     >
-      <Formik initialValues={initialValues} validationSchema={SignUpSchema}>
+      <Formik
+        initialValues={initialValues}
+        validationSchema={SignUpSchema}
+        onSubmit={handleSubmit}
+      >
         {({ isSubmitting }) => (
           <Form className=" ">
             <Stack direction={"column"} spacing={8}>
@@ -228,6 +268,23 @@ function SignUp() {
                     </FormControl>
                   )}
                 </Field>
+                <div>
+                  <label>Role</label>
+                  <Field
+                    as="select"
+                    name="role"
+                    className="w-3/4 p-2 border-gray-700 border-2"
+                  >
+                    <option value="">Choose account role</option>
+                    <option value="personal">Farmer</option>
+                    <option value="business">User</option>
+                  </Field>
+                  <ErrorMessage
+                    name="account_type"
+                    component="div"
+                    className="text-red-600"
+                  />
+                </div>
               </>
 
               {/* Sign In Link */}
