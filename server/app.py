@@ -39,6 +39,7 @@ cloudinary.config(
     api_key = os.getenv('API_KEY'),
     api_secret = os.getenv('API_SECRET')
 )
+
 app.config['SEND_API_KEY'] = os.getenv('SEND_API_KEY')
 if not all([cloudinary.config().cloud_name, cloudinary.config().api_key, cloudinary.config().api_secret]):
     raise ValueError(
@@ -79,7 +80,6 @@ def authorized():
     })
 
 
-
 class Signup(Resource):
     def post(self):
         app.logger.info(f"Form data: {request.form}")
@@ -97,20 +97,21 @@ class Signup(Resource):
             role = data.get("role")
             profile_url = data.get("profile")
             app.logger.info(
-            f"Recieved Data: username:{username}, email:{email}, profile_url:{profile_url}, role:{role}"
-        )
-        # Validate missing fields
-            missing_fields = [field for field in ["username", "email", "phone",
-                                                "password", "profile_url"] if not data.get(field)]
+                f"Received Data: username:{username}, email:{email}, profile_url:{profile_url}, role:{role}"
+            )
+
+            # Validate missing fields
+            missing_fields = [field for field in [
+                "username", "email", "password", "profile"] if not data.get(field)]
             if missing_fields:
                 return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
 
-            # Upload file to Cloudinary (or handle it appropriately in your context)
+            # Upload file to Cloudinary
             try:
                 if profile_url == 'image':
-                    # Ensure you have your uploader configured
-                    upload_result = uploader.upload(
-                        file_to_upload, resource_type='image')
+                    timestamp = str(int(datetime.utcnow().timestamp()))
+                    upload_result = cloudinary.uploader.upload(
+                        file_to_upload, resource_type='image',timestamp=timestamp)
                 else:
                     return jsonify({"error": "Profile must be an image"}), 400
             except Exception as e:
@@ -118,7 +119,7 @@ class Signup(Resource):
                 return jsonify({"error": "File upload failed"}), 500
 
             file_url = upload_result.get('url')
-            user = User(
+            new_user = User(
                 username=username,
                 email=email,
                 password=password,
@@ -126,18 +127,18 @@ class Signup(Resource):
                 profile_picture=file_url,
                 joined_at=datetime.utcnow()
             )
-            db.session.add(user)
+            db.session.add(new_user)
             db.session.commit()
 
-            return make_response(jsonify({"message": f"{role} account created successfully"}), 201)
+            return jsonify({"message": f"{role} account created successfully"}), 201
 
         except IntegrityError:
             db.session.rollback()
-            return make_response(jsonify({"error": "Username or email already exists"}), 400)
+            return jsonify({"error": "Username or email already exists"}), 400
 
         except Exception as e:
-            return make_response(jsonify({"error": str(e)}), 500)
-
+            app.logger.error(f"Unexpected error: {e}")
+            return jsonify({"error": str(e)}), 500
 
 class Login(Resource):
     def post(self):

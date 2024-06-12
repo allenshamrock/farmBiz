@@ -11,16 +11,14 @@ import {
   Select,
   Stack,
   Button,
-  Image,
   Text,
-  Flex,
   Link,
 } from "@chakra-ui/react";
 import { FaImage } from "react-icons/fa";
 import * as yup from "yup";
-import { Formik, Form, Field,ErrorMessage } from "formik";
+import { Formik, Form, Field, ErrorMessage } from "formik";
 import { toast } from "react-toastify";
-import axios from 'axios'
+import axios from "axios";
 import {
   AtSignIcon,
   EmailIcon,
@@ -45,15 +43,15 @@ function SignUp() {
     username: yup
       .string()
       .label("Please enter your username")
-      .min(2, "too short")
-      .max(70, "too long"),
+      .min(2, "Too short")
+      .max(70, "Too long"),
     password: yup
       .string()
       .min(8, "Password must have a minimum of 8 characters"),
     confirmPassword: yup
       .string()
-      .oneOf([yup.ref("password"), null], "Password must match")
-      .required("Please confrim your password"),
+      .oneOf([yup.ref("password"), null], "Passwords must match")
+      .required("Please confirm your password"),
   });
 
   const initialValues = {
@@ -62,7 +60,7 @@ function SignUp() {
     password: "",
     confirmPassword: "",
     profile_picture: "image",
-    role:''
+    role: "",
   };
 
   const handleFileChange = (e) => {
@@ -76,8 +74,8 @@ function SignUp() {
       formData.append("email", values.email);
       formData.append("username", values.username);
       formData.append("password", values.password);
-      formData.append("role",values.role)
-      formData.append("profile_picture", "image");
+      formData.append("role", values.role);
+      formData.append("profile", "image");
 
       if (file) {
         formData.append("file", file);
@@ -86,13 +84,19 @@ function SignUp() {
         return toast.error("File is required");
       }
 
-      const response = await axios.post("http://127.0.0.1:5555/signup",formData)
-   
-      if (!response.ok) {
-        const errorMessage = await response.json();
-        console.log(formData)
-        setError(errorMessage.error || "An error occured .PLease try again");
+      const response = await axios.post(
+        "http://127.0.0.1:5555/signup",
+        formData,
+      );
+
+      if (response.status !== 201) {
+        setSubmitting(false);
+        return toast.error(
+          response.data.error || "An error occurred. Please try again"
+        );
       }
+
+      toast.success("Account created successfully!");
     } catch (error) {
       console.error("Error posting data", error);
       toast.error(
@@ -101,13 +105,13 @@ function SignUp() {
     } finally {
       setSubmitting(false);
     }
-    console.log(formData)
   };
+
   return (
     <Box
       minH={"100vh"}
       w={{ base: "100%", md: "50%" }}
-      className="h-screen  py-[60px] flex flex-col justify-center items-center "
+      className="h-screen py-[60px] flex flex-col justify-center items-center"
     >
       <Formik
         initialValues={initialValues}
@@ -143,7 +147,6 @@ function SignUp() {
                   )}
                 </Field>
 
-                {/* Email Field */}
                 <Field name="email">
                   {({ field, form }) => (
                     <FormControl
@@ -169,7 +172,6 @@ function SignUp() {
                   )}
                 </Field>
 
-                {/* File input */}
                 <div className="flex p-4 border-dotted border-2 rounded-full border-slate-800 my-3 justify-center align-middle h-60 w-60">
                   <label className="drop-area">
                     <input
@@ -194,7 +196,7 @@ function SignUp() {
                     )}
                   </label>
                 </div>
-                {/* Password Field */}
+
                 <Field name="password">
                   {({ field, form }) => (
                     <FormControl
@@ -230,7 +232,6 @@ function SignUp() {
                   )}
                 </Field>
 
-                {/* Confirm Password Field */}
                 <Field name="confirmPassword">
                   {({ field, form }) => (
                     <FormControl
@@ -276,20 +277,17 @@ function SignUp() {
                     className="w-3/4 p-2 border-gray-700 border-2"
                   >
                     <option value="">Choose account role</option>
-                    <option value="personal">Farmer</option>
-                    <option value="business">User</option>
+                    <option value="farmer">Farmer</option>
+                    <option value="user">User</option>
                   </Field>
                   <ErrorMessage
-                    name="account_type"
+                    name="role"
                     component="div"
                     className="text-red-600"
                   />
                 </div>
               </>
 
-              {/* Sign In Link */}
-
-              {/* Submit Button */}
               <Button
                 alignSelf={"center"}
                 w={"150px"}
