@@ -59,7 +59,7 @@ function SignUp() {
     username: "",
     password: "",
     confirmPassword: "",
-    profile_picture: "image",
+    profile_url: "image",
     role: "",
   };
 
@@ -75,7 +75,7 @@ function SignUp() {
       formData.append("username", values.username);
       formData.append("password", values.password);
       formData.append("role", values.role);
-      formData.append("profile", "image");
+      formData.append("profile_url", "image");
 
       if (file) {
         formData.append("file", file);
@@ -84,16 +84,20 @@ function SignUp() {
         return toast.error("File is required");
       }
 
-      const response = await axios.post(
+      const response = await fetch(
         "http://127.0.0.1:5555/signup",
-        formData,
+      {
+        method:"POST",
+        body:formData
+      }
       );
 
-      if (response.status !== 201) {
-        setSubmitting(false);
-        return toast.error(
-          response.data.error || "An error occurred. Please try again"
-        );
+      if (!response.ok) {
+        const errorMessage = await response.json()
+       console.log(formData)
+      setError(
+        errorMessage.error || "An error occurred.PLease try again later"
+      )
       }
 
       toast.success("Account created successfully!");

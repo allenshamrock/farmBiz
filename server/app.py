@@ -95,23 +95,22 @@ class Signup(Resource):
             email = data.get("email")
             password = data.get("password")
             role = data.get("role")
-            profile_url = data.get("profile")
+            profile_url = data.get("profile_url")
             app.logger.info(
                 f"Received Data: username:{username}, email:{email}, profile_url:{profile_url}, role:{role}"
             )
 
             # Validate missing fields
             missing_fields = [field for field in [
-                "username", "email", "password", "profile"] if not data.get(field)]
+                "username", "email", "password", "profile_url", "role"] if not data.get(field)]
             if missing_fields:
                 return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
 
             # Upload file to Cloudinary
             try:
                 if profile_url == 'image':
-                    timestamp = str(int(datetime.utcnow().timestamp()))
                     upload_result = cloudinary.uploader.upload(
-                        file_to_upload, resource_type='image',timestamp=timestamp)
+                        file_to_upload, resource_type='image')
                 else:
                     return jsonify({"error": "Profile must be an image"}), 400
             except Exception as e:
@@ -119,14 +118,16 @@ class Signup(Resource):
                 return jsonify({"error": "File upload failed"}), 500
 
             file_url = upload_result.get('url')
+
             new_user = User(
                 username=username,
                 email=email,
-                password=password,
                 role=role,
-                profile_picture=file_url,
+                profile_url=file_url,
                 joined_at=datetime.utcnow()
             )
+            new_user.set_password(password)  # Using set_password method
+
             db.session.add(new_user)
             db.session.commit()
 
@@ -139,6 +140,7 @@ class Signup(Resource):
         except Exception as e:
             app.logger.error(f"Unexpected error: {e}")
             return jsonify({"error": str(e)}), 500
+
 
 class Login(Resource):
     def post(self):

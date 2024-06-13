@@ -10,7 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class User(db.Model, SerializerMixin):
     __tablename__ = "users"
     serialize_only = ('id', 'username', 'email',
-                      'profile_picture', 'joined_at', 'role')
+                      'profile_url', 'joined_at', 'role')
     serialize_exclude = ('password_hash',)
 
     id = db.Column(
@@ -22,7 +22,7 @@ class User(db.Model, SerializerMixin):
     )
     username = db.Column(db.String(100), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
-    profile_picture = db.Column(db.String(255), default="")
+    profile_url = db.Column(db.String(255), default="")
     password_hash = db.Column(db.String(100), nullable=False)
     joined_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     role = db.Column(db.String(), nullable=False, default='user')
