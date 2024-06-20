@@ -16,7 +16,7 @@ with app.app_context():
             user = User(
                 username=username,
                 email=f"{username}@gmail.com",
-                profile_picture=fake.image_url(),
+                profile_url=fake.image_url(),
                 password_hash=generate_password_hash('password'),
             )
             db.session.add(user)
@@ -29,7 +29,7 @@ with app.app_context():
                 username=username,
                 email=f'{username}@gmail.com',
                 password_hash=generate_password_hash('password'),
-                profile_picture='https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                profile_url='https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
                 role='farmer'
             )
             db.session.add(user)
